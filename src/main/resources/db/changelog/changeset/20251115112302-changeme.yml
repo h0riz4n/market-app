@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115112302"
+      author: "Rustam Khudoyan"
+      preConditions:
+        - onFail: CONTINUE
+        - not:
+            - tableExists:
+                schemaName: ${schema}
+                tableName: order
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: order
+            remarks: Таблица заказов
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  remarks: Идентификатор заказа
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: order_id_pk
+              - column:
+                  name: total
+                  type: int
+                  remarks: Сумма заказа
+                  constraints:
+                    nullable: false

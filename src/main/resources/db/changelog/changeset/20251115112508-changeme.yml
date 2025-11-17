@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115112508"
+      author: Rustam Khudoyan
+      preConditions:
+        - onFail: CONTINUE
+        - not:
+            - tableExists:
+                schemaName: ${schema}
+                tableName: order_item
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: order_item
+            remarks: Таблица связи заказов и товаров
+            columns:
+              - column:
+                  name: order_id
+                  type: bigint
+                  remarks: Идентификатор заказа
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: order_item_pk
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: order
+                    referencedColumnNames: id
+                    foreignKeyName: order_fk
+                    deleteCascade: true
+              - column:
+                  name: item_id
+                  type: bigint
+                  autoIncrement: false
+                  remarks: Идентификатор товара
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: order_item_pk
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: item
+                    referencedColumnNames: id
+                    foreignKeyName: item_fk
+                    deleteCascade: true
+              - column:
+                  name: quantity
+                  type: int
+                  defaultValue: "1"
+                  remarks: Колиичество товара
+                  constraints:
+                    nullable: false

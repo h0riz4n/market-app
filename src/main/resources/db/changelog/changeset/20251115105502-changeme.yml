@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115105502"
+      author: Rustam Khudoyan
+      comment: Создание таблицы товаров
+      preConditions:
+        - onFail: CONTINUE
+        - not:
+            - tableExists:
+                schemaName: ${schema}
+                tableName: item
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: item
+            remarks: Таблица товаров
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  remarks: Идентификатор товара
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: item_id_pk
+              - column:
+                  name: title
+                  type: varchar(255)
+                  remarks: Название товара
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+                  remarks: Описание товара
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: int
+                  remarks: Цена товара
+                  constraints:
+                    nullable: false
+              - column:
+                  name: image
+                  type: text
+                  remarks: Путь до изображения
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cart_count
+                  type: int
+                  defaultValue: "0"
+                  remarks: Количество товара в корзине
+                  constraints:
+                    nullable: false

@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115112208"
+      author: Rustam Khudoyan
+      comment: Создание последовательности ID для заказов
+      preConditions:
+        - onFail: CONTINUE
+        - not:
+            - sequenceExists:
+                schemaName: ${schema}
+                sequenceName: order_id_seq
+      changes:
+        - createSequence:
+            schemaName: ${schema}
+            sequenceName: order_id_seq
+            startValue: 1
+            incrementBy: 50

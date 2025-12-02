@@ -1,29 +1,16 @@
 package ru.yandex.market_app.repository;
 
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import ru.yandex.market_app.model.domain.Order;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+public interface OrderRepository {
 
-import ru.yandex.market_app.model.entity.OrderEntity;
+    Mono<Order> findById(Long id);
 
-@Repository
-public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
+    Flux<Order> findAll();
 
-    @Query(value = """
-        select oe from OrderEntity oe 
-        join fetch oe.items
-        join fetch oe.items.id.item
-        """)
-    List<OrderEntity> findAll();
+    Mono<Order> save(Order order);
 
-    @Query(value = """
-        select oe from OrderEntity oe 
-        join fetch oe.items
-        join fetch oe.items.id.item
-        where oe.id = :id
-    """)
-    Optional<OrderEntity> findById(Long id);
+    Mono<Void> deleteAll();
 }

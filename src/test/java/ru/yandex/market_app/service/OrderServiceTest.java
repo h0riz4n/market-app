@@ -1,43 +1,51 @@
 package ru.yandex.market_app.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import ru.yandex.market_app.model.entity.ItemEntity;
-import ru.yandex.market_app.model.entity.OrderEntity;
-import ru.yandex.market_app.model.entity.OrderItemEntity;
-import ru.yandex.market_app.model.entity.id.OrderItemId;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import ru.yandex.market_app.exception.ApiServiceException;
+import ru.yandex.market_app.model.domain.Item;
+import ru.yandex.market_app.model.domain.Order;
+import ru.yandex.market_app.model.domain.OrderItem;
+import ru.yandex.market_app.model.domain.id.OrderItemId;
+import ru.yandex.market_app.repository.OrderItemRepository;
 import ru.yandex.market_app.repository.OrderRepository;
 
-@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {
 
     @Mock
     private OrderRepository orderRepo;
 
+    @Mock
+    private OrderItemRepository orderItemRepo;
+
     @InjectMocks
     private OrderService orderService;
 
-    private ItemEntity mockItem;
-    private OrderEntity mockOrder;
+    private Item mockItem;
+    private Order mockOrder;
+    private OrderItem mockOrderItem;
 
     @BeforeEach
     public void beforeEach() {
-        this.mockItem = ItemEntity.builder()
+        this.mockItem = Item.builder()
             .id(1L)
             .image("image/1.jpg")
             .title("Футбольный мяч")
@@ -46,15 +54,16 @@ public class OrderServiceTest {
             .price(100)
             .build();
 
-        this.mockOrder = OrderEntity.builder()
+        this.mockOrder = Order.builder()
+            .id(1L)
             .total(mockItem.getPrice())
             .build();
     
-        var orderItem = OrderItemEntity.builder()
-            .id(new OrderItemId(mockOrder, mockItem))
+        this.mockOrderItem = OrderItem.builder()
+            .id(new OrderItemId(mockOrder.getId(), mockItem.getId()))
             .quantity(mockItem.getCartCount())
             .build();
-        mockOrder.setItems(List.of(orderItem));
+        mockOrder.setItems(List.of(mockOrderItem));
     }
 
     @AfterEach
@@ -65,35 +74,42 @@ public class OrderServiceTest {
 
     @Test
     public void getAllTest() {
-        var expectedOrders = List.of(mockOrder);
-
         when(orderRepo.findAll())
-            .thenReturn(expectedOrders);
+            .thenReturn(Flux.just(mockOrder));
 
-        var actualOrders = orderService.getAll();
-
-        assertEquals(expectedOrders, actualOrders);
+        orderService.getAll().collectList().subscribe(orders -> {
+            assertTrue(orders.contains(mockOrder));
+        });
     }
 
     @Test
     public void getByIdTest() {
         when(orderRepo.findById(mockOrder.getId()))
-            .thenReturn(Optional.of(mockOrder));
+            .thenReturn(Mono.just(mockOrder));
 
-        var order = orderService.getById(mockOrder.getId());
-
-        assertEquals(mockOrder, order);
+        orderService.getById(mockOrder.getId()).subscribe(order -> {
+            assertEquals(mockOrder, order);
+        });
     }
 
     @Test
     public void buyTest() {
-        when(orderRepo.save(any(OrderEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        assertThrows(
+            ApiServiceException.class, 
+            () -> orderService.buy(Collections.emptyList()).block()
+        );
 
         mockItem.setCartCount(2);
-        var order = orderService.buy(List.of(mockItem));
 
-        Integer pr = mockItem.getCartCount() * mockItem.getPrice();
-        assertEquals(pr, order.getTotal());
+        when(orderRepo.save(any(Order.class)))
+            .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        when(orderItemRepo.saveAll(mockOrder, List.of(mockItem)))
+            .thenReturn(Flux.just(mockOrderItem));
+
+        orderService.buy(List.of(mockItem)).subscribe(order -> {
+            Integer price = mockItem.getCartCount() * mockItem.getPrice();
+            assertEquals(price, order.getTotal());
+        });
     }
 }

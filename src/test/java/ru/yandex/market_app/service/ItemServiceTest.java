@@ -1,6 +1,5 @@
 package ru.yandex.market_app.service;
 
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -12,11 +11,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,15 +22,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.relational.core.query.Criteria;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.market_app.exception.ApiServiceException;
-import ru.yandex.market_app.model.entity.ItemEntity;
+import ru.yandex.market_app.model.domain.Item;
 import ru.yandex.market_app.model.enums.EActionType;
 import ru.yandex.market_app.model.enums.ESortType;
 import ru.yandex.market_app.repository.ItemRepository;
-import ru.yandex.market_app.repository.specification.ItemSpecification;
 
-@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceTest {
 
@@ -43,16 +41,16 @@ public class ItemServiceTest {
     @InjectMocks
     private ItemService itemService;
 
-    private ItemEntity mockItem;
+    private Item mockItem;
 
     @BeforeEach
     public void beforeEach() {
-        this.mockItem = ItemEntity.builder()
+        this.mockItem = Item.builder()
             .id(1L)
             .image("image/1.jpg")
             .title("Футбольный мяч")
             .description("Мяч для игры в футбол")
-            .cartCount(0)
+            .cartCount(1)
             .price(100)
             .build();
     }
@@ -65,16 +63,20 @@ public class ItemServiceTest {
     @Test
     public void getByIdTest() {
         when(itemRepo.findById(mockItem.getId()))
-            .thenReturn(Optional.of(mockItem));
+            .thenReturn(Mono.just(mockItem));
 
-        var actualItem = itemService.getById(mockItem.getId());
-        assertEquals(mockItem, actualItem);
-        assertDoesNotThrow(() -> itemService.getById(mockItem.getId()));
+        itemService.getById(mockItem.getId()).subscribe(item -> {
+            assertEquals(mockItem, item);
+        });
 
+        assertDoesNotThrow(() -> itemService.getById(mockItem.getId()).subscribe());
+        
         when(itemRepo.findById(anyLong()))
-            .thenReturn(Optional.empty());
+            .thenReturn(Mono.empty());
 
-        assertThrows(ApiServiceException.class, () -> itemService.getById(1L));
+        assertThrows(ApiServiceException.class, () -> {
+            itemService.getById(mockItem.getId()).block();
+        });
     }
 
     @Test
@@ -83,12 +85,12 @@ public class ItemServiceTest {
         var pageable = PageRequest.of(0, 5, Sort.unsorted());
         var expectedItems = List.of(mockItem);
 
-        when(itemRepo.findAll(any(ItemSpecification.class), eq(pageable)))
-            .thenReturn(new PageImpl<>(expectedItems, pageable, 1));
+        when(itemRepo.findAll(any(Criteria.class), eq(pageable)))
+            .thenReturn(Mono.just(new PageImpl<>(expectedItems, pageable, 1)));
 
-        var actualItems = itemService.getAll(search, ESortType.NO, 0, 5);
-
-        assertEquals(expectedItems, actualItems.getContent());
+        itemService.getAll(search, ESortType.NO, 0, 5).subscribe(page -> {
+            assertEquals(expectedItems, page.getContent());
+        });
     }
 
     @Test
@@ -98,14 +100,14 @@ public class ItemServiceTest {
             .build();
 
         when(itemRepo.findById(mockItem.getId()))
-            .thenReturn(Optional.of(mockItem));
-        
-        when(itemRepo.save(any(ItemEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
-        
-        var actualItem = itemService.upadteCart(mockItem.getId(), EActionType.PLUS);
+            .thenReturn(Mono.just(mockItem));
 
-        assertEquals(newItem.getCartCount(), actualItem.getCartCount());
+        when(itemRepo.updateCartCount(mockItem))
+            .thenReturn(Mono.just(1L));
+
+        itemService.upadteCart(mockItem.getId(), EActionType.PLUS).subscribe(item -> {
+            assertEquals(newItem.getCartCount(), item.getCartCount());
+        });
     }
 
     @Test
@@ -113,23 +115,22 @@ public class ItemServiceTest {
         mockItem.setCartCount(1);
 
         when(itemRepo.findAllByCartCountGreaterThan(0))
-            .thenReturn(List.of(mockItem));
+            .thenReturn(Flux.just(mockItem));
 
-        var itemsInCart = itemService.getAllInCart();
-        assertEquals(List.of(mockItem), itemsInCart);
+        itemService.getAllInCart().collectList().subscribe(items -> {
+            assertTrue(items.contains(mockItem));
+        });
     }
 
     @Test
-    public void resetAllCart() {
-        mockItem.setCartCount(1);
-
+    public void resetCartTest() {
         doAnswer(invoc -> {
             mockItem.setCartCount(0);
-            return nullValue();
+            return Mono.just(1L);
         }).when(itemRepo).upadteAll();
 
-        itemService.resetCart();
-
-        assertTrue(mockItem.getCartCount().equals(0));
+        itemService.resetCart().subscribe(val -> {
+            assertTrue(mockItem.getCartCount().equals(0));
+        });
     }
 }

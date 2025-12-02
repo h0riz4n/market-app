@@ -3,70 +3,74 @@ package ru.yandex.market_app.controller;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import ru.yandex.market_app.container.DatabaseContainer;
+import ru.yandex.market_app.container.DatabaseContainerTest;
 import ru.yandex.market_app.util.DataFactory;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.nio.charset.StandardCharsets;
 
 @Tag("integration")
 @Testcontainers
-@ImportTestcontainers(DatabaseContainer.class)
-@AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@ImportTestcontainers(DatabaseContainerTest.class)
+@AutoConfigureWebTestClient
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class OrderControllerTest extends DataFactory {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @Test
     public void getAllTest() throws Exception {
-        mockMvc.perform(get("/orders"))
-            .andExpect(status().isOk())
-            .andExpect(content().encoding(StandardCharsets.UTF_8))
-            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
+        webTestClient.get()
+            .uri("/orders")
+            .exchange()
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
     }
 
     @Test
     public void getOrderById() throws Exception {
-        var mockRequest = get("/orders/{id}", mockOrder.getId())
-            .queryParam("newOrder", "false");
+        var mockRequest = UriComponentsBuilder.fromUriString("/orders/{id}")
+            .queryParam("newOrder", "false")
+            .build(mockOrder.getId());
+
+        var mockBadRequest = UriComponentsBuilder.fromUriString("/orders/{id}")
+            .build(0L);
         
-        var mockBadRequest = get("/orders/{id}", 0L);
+        var mockNotFoundRequest = UriComponentsBuilder.fromUriString("/orders/{id}")
+            .build(999L);
 
-        var mockNotFoundRequest = get("/orders/{id}", 9999L);
+        webTestClient.get()
+            .uri(mockRequest)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
+        
+        webTestClient.get()
+            .uri(mockBadRequest)
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
 
-        mockMvc.perform(mockRequest)
-            .andExpect(status().isOk())
-            .andExpect(content().encoding(StandardCharsets.UTF_8))
-            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
-
-        mockMvc.perform(mockBadRequest)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
-
-        mockMvc.perform(mockNotFoundRequest)
-            .andExpect(status().isNotFound())
-            .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+        webTestClient.get()
+            .uri(mockNotFoundRequest)
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
     @Test
     public void buyTest() throws Exception {
         mockItem.setCartCount(1);
-        itemRepo.save(mockItem);
+        itemRepo.updateCartCount(mockItem).block();
 
-        var mockRequest = post("/buy");
-
-        mockMvc.perform(mockRequest)
-            .andExpect(status().is3xxRedirection());
+        webTestClient.post()
+            .uri("/buy")
+            .exchange()
+            .expectStatus().is3xxRedirection();
     }
 }

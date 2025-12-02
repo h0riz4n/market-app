@@ -1,14 +1,12 @@
 package ru.yandex.market_app.runner;
 
-import java.util.List;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import ru.yandex.market_app.model.entity.ItemEntity;
+import reactor.core.publisher.Mono;
+import ru.yandex.market_app.model.domain.Item;
 import ru.yandex.market_app.repository.ItemRepository;
 
 @Component
@@ -19,53 +17,51 @@ public class ItemRunner implements CommandLineRunner {
     private final ItemRepository itemRepo;
 
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
-        ItemEntity ball = getOrCreate(
+        getOrCreate(
             "Футбольный мяч",
             "Большой футбольный мяч для игры на улице",
             100,
             "image/1.jpg"
-        );
+        ).subscribe();
 
-        ItemEntity umbrella = getOrCreate(
+        getOrCreate(
             "Зонтик складной",
             "Компактный и прочный зонт для дождливой погоды",
             150,
             "image/2.jpg"
-        );
+        ).subscribe();
 
-        ItemEntity headphones = getOrCreate(
+        getOrCreate(
             "Наушники",
             "Беспроводные наушники с шумоподавлением",
             3200,
             "image/3.jpeg"
-        );
+        ).subscribe();
 
-        ItemEntity backpack = getOrCreate(
+        getOrCreate(
             "Рюкзак городской",
             "Лёгкий и вместительный рюкзак для повседневного использования",
             1800,
             "image/4.jpg"
-        );
+        ).subscribe();
 
-        ItemEntity watch = getOrCreate(
+        getOrCreate(
             "Умные часы",
             "Смарт-часы с мониторингом активности и уведомлениями",
             5400,
             "image/5.jpg"
-        );
-
-        itemRepo.saveAll(List.of(ball, umbrella, headphones, backpack, watch));
+        ).subscribe();
     }
 
-    private ItemEntity getOrCreate(String title, String description, Integer price, String image) {
+    private Mono<Item> getOrCreate(String title, String description, Integer price, String image) {
         return itemRepo.findByTitle(title)
-            .orElse(createItem(title, description, price, image));
+            .switchIfEmpty(itemRepo.save(createItem(title, description, price, image)));
+        
     }
-    
-    private ItemEntity createItem(String title, String description, Integer price, String imagePath) {
-        return ItemEntity.builder()
+
+    private Item createItem(String title, String description, Integer price, String imagePath) {
+        return Item.builder()
             .title(title)
             .description(description)
             .price(price)

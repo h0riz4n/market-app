@@ -1,17 +1,16 @@
 package ru.yandex.market_app.util;
 
-
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ru.yandex.market_app.model.entity.ItemEntity;
-import ru.yandex.market_app.model.entity.OrderEntity;
-import ru.yandex.market_app.model.entity.OrderItemEntity;
-import ru.yandex.market_app.model.entity.id.OrderItemId;
+import reactor.core.publisher.Mono;
+import ru.yandex.market_app.model.domain.Item;
+import ru.yandex.market_app.model.domain.Order;
 import ru.yandex.market_app.repository.ItemRepository;
+import ru.yandex.market_app.repository.OrderItemRepository;
 import ru.yandex.market_app.repository.OrderRepository;
 
 public class DataFactory {
@@ -22,23 +21,25 @@ public class DataFactory {
     @Autowired
     protected OrderRepository orderRepo;
 
-    protected ItemEntity mockItem;
-    protected OrderEntity mockOrder;
+    @Autowired
+    protected OrderItemRepository orderItemRepo;
+
+    protected Item mockItem;
+    protected Order mockOrder;
 
     @BeforeEach
     public void beforeEach() {
-        this.mockItem = createItem();
-        this.mockOrder = createOrder(mockItem);
+        this.mockItem = createItem().block();
+        this.mockOrder = createOrder(mockItem).block();
     }
 
     @AfterEach
     public void afterEach() {
-        orderRepo.deleteAll();
-        itemRepo.deleteAll();
+        orderRepo.deleteAll().then(itemRepo.deleteAll()).block();
     }
 
-    private ItemEntity createItem() {
-        var item = ItemEntity.builder()
+    protected Mono<Item> createItem() {
+        Item item = Item.builder()
             .title("Футбольный мяч")
             .description("Большой футбольный мяч для игры на улице")
             .price(100)
@@ -47,16 +48,20 @@ public class DataFactory {
         return itemRepo.save(item);
     }
 
-    private OrderEntity createOrder(ItemEntity item) {
-        var order = OrderEntity.builder()
+    protected Mono<Order> createOrder(Item item) {
+        Order order = Order.builder()
             .total(item.getPrice())
             .build();
-    
-        var orderItem = OrderItemEntity.builder()
-            .id(new OrderItemId(order, item))
-            .quantity(item.getCartCount())
-            .build();
-        order.setItems(List.of(orderItem));
-        return orderRepo.save(order);
+
+        return orderRepo.save(order)
+            .flatMap(savedOrder ->
+                orderItemRepo.saveAll(savedOrder, List.of(item))
+                    .collectList()
+                    .map(orderItems -> {
+                        return savedOrder.toBuilder()
+                            .items(orderItems)
+                            .build();
+                    })
+            );
     }
 }

@@ -1,6 +1,5 @@
 package ru.yandex.market_app.service;
 
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,9 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.market_app.exception.ApiServiceException;
-import ru.yandex.market_app.model.entity.ItemEntity;
-import ru.yandex.market_app.model.entity.ItemEntity_;
+import ru.yandex.market_app.model.domain.Item;
 import ru.yandex.market_app.model.enums.EActionType;
 import ru.yandex.market_app.model.enums.ESortType;
 import ru.yandex.market_app.model.filter.ItemFilterModel;
@@ -26,46 +26,56 @@ public class ItemService {
 
     private final ItemRepository itemRepo;
 
-    public ItemEntity getById(Long id) {
+    public Mono<Item> getById(Long id) {
         return itemRepo.findById(id)
-            .orElseThrow(() -> new ApiServiceException(HttpStatus.NOT_FOUND, "Товар не найден"));
+            .switchIfEmpty(Mono.error(new ApiServiceException(HttpStatus.NOT_FOUND, "Товар не найден")));
     }
 
-    public Page<ItemEntity> getAll(String search, ESortType sort, Integer pageNumber, Integer pageSize) {
+    public Mono<Page<Item>> getAll(String search, ESortType sort, Integer pageNumber, Integer pageSize) {
         var filter = ItemFilterModel.builder()
             .search(search)
             .build();
 
         var sorting = switch(sort) {
             case NO -> Sort.unsorted();
-            case ALPHA -> Sort.by(Direction.ASC, ItemEntity_.TITLE);
-            case PRICE -> Sort.by(Direction.ASC, ItemEntity_.PRICE);
+            case ALPHA -> Sort.by(Direction.ASC, "title");
+            case PRICE -> Sort.by(Direction.ASC, "price");
         };
 
-        return itemRepo.findAll(new ItemSpecification(filter), PageRequest.of(pageNumber, pageSize, sorting));
+        var specification = new ItemSpecification();
+
+        return itemRepo.findAll(specification.toCriteria(filter), PageRequest.of(pageNumber, pageSize, sorting));
     }
 
     @Transactional
-    public ItemEntity upadteCart(Long id, EActionType action) {
-        ItemEntity item = getById(id);
+    public Mono<Item> upadteCart(Long id, EActionType action) {
+        return getById(id)
+            .map(item -> updateCartCount(item, action))
+            .map(item -> {
+                itemRepo.updateCartCount(item);
+                return item;
+            });
+    }
 
+    public Flux<Item> getAllInCart() {
+        return itemRepo.findAllByCartCountGreaterThan(0);
+    }
+
+    @Transactional
+    public Mono<Long> resetCart() {
+        return itemRepo.upadteAll();
+    }
+
+    private Item updateCartCount(Item item, EActionType action) {
         switch (action) {
             case PLUS -> item.setCartCount(item.getCartCount() + 1);
             case MINUS -> item.setCartCount(item.getCartCount() - 1);
             case DELETE -> item.setCartCount(0);
         }
 
-        if (item.getCartCount() < 0) item.setCartCount(0);
+        if (item.getCartCount() < 0) 
+            item.setCartCount(0);
 
-        return itemRepo.save(item);
-    }
-
-    public List<ItemEntity> getAllInCart() {
-        return itemRepo.findAllByCartCountGreaterThan(0);
-    }
-
-    @Transactional
-    public void resetCart() {
-        itemRepo.upadteAll();
+        return item;
     }
 }

@@ -2,8 +2,8 @@ package ru.yandex.market_app.configuration;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.reactive.config.CorsRegistry;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 import lombok.RequiredArgsConstructor;
 import ru.yandex.market_app.property.MarketAppProperty;
@@ -11,7 +11,7 @@ import ru.yandex.market_app.property.MarketAppProperty;
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(MarketAppProperty.class)
-public class WebConfiguration implements WebMvcConfigurer {
+public class WebConfiguration implements WebFluxConfigurer {
     
     private final MarketAppProperty property;
 

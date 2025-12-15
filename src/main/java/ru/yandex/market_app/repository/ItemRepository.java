@@ -1,26 +1,28 @@
 package ru.yandex.market_app.repository;
 
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.relational.core.query.Criteria;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import ru.yandex.market_app.model.domain.Item;
 
-import ru.yandex.market_app.model.entity.ItemEntity;
+public interface ItemRepository {
 
-@Repository
-public interface ItemRepository extends JpaRepository<ItemEntity, Long>, JpaSpecificationExecutor<ItemEntity> {
+    Mono<Item> findById(Long id);
 
-    Optional<ItemEntity> findByTitle(String title);
+    Mono<Item> findByTitle(String title);
 
-    List<ItemEntity> findAllByCartCountGreaterThan(Integer count);
+    Flux<Item> findAllByCartCountGreaterThan(Integer count);
 
-    @Modifying
-    @Query(value = """
-        update ItemEntity ie set ie.cartCount = 0 where ie.cartCount != 0 
-    """)
-    void upadteAll();
+    Mono<Page<Item>> findAll(Criteria criteria, Pageable pageable);
+
+    Mono<Long> upadteAll();
+
+    Mono<Long> updateCartCount(Item item);
+
+    Mono<Item> save(Item item);
+
+    Mono<Long> deleteAll();
 }

@@ -2,41 +2,32 @@ package ru.yandex.market_app.repository.specification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.relational.core.query.Criteria;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-import ru.yandex.market_app.model.entity.ItemEntity;
-import ru.yandex.market_app.model.entity.ItemEntity_;
+import lombok.NoArgsConstructor;
 import ru.yandex.market_app.model.filter.ItemFilterModel;
 
-@RequiredArgsConstructor
-public class ItemSpecification implements Specification<ItemEntity> {
+@NoArgsConstructor
+public class ItemSpecification {
 
-    @NotNull
-    private final ItemFilterModel filter;
-
-    @Override
-    public Predicate toPredicate(Root<ItemEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-        List<Predicate> predicates = new ArrayList<>();
+    public Criteria toCriteria(ItemFilterModel filter) {
+        List<Criteria> criterias = new ArrayList<>();
 
         filter.getSearch()
-            .filter(search -> !search.isBlank())
+            .filter(Predicate.not(String::isBlank))
             .map(String::trim)
             .ifPresent(search -> {
                 String pattern = "%" + search.toLowerCase() + "%";
 
-                Predicate titlePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get(ItemEntity_.TITLE)), pattern);
-                Predicate descriptionPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get(ItemEntity_.DESCRIPTION)), pattern);
-                
-                predicates.add(criteriaBuilder.or(titlePredicate, descriptionPredicate));
+                criterias.add(
+                    Criteria
+                        .where("title").like(pattern)
+                        .or(Criteria.where("description").like(pattern))
+                );
             });
 
-        return predicates.isEmpty() ? null : criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        return Criteria.from(criterias);
     }
 }

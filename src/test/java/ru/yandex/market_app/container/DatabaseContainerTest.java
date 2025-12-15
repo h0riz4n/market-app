@@ -5,7 +5,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import org.testcontainers.junit.jupiter.Container;
 
-public final class DatabaseContainer {
+public final class DatabaseContainerTest {
     
     @Container
     @ServiceConnection

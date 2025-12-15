@@ -9,10 +9,10 @@ import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import lombok.RequiredArgsConstructor;
+import ru.yandex.market_app.model.domain.Order;
+import ru.yandex.market_app.model.domain.OrderItem;
 import ru.yandex.market_app.model.dto.ItemDto;
 import ru.yandex.market_app.model.dto.OrderDto;
-import ru.yandex.market_app.model.entity.OrderEntity;
-import ru.yandex.market_app.model.entity.OrderItemEntity;
 
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
@@ -23,17 +23,18 @@ public abstract class OrderMapper {
 
     @Mapping(target = "items", source = "entity.items", qualifiedByName = "toItemDto")
     @Mapping(target = "totalSum", source = "entity.total")
-    public abstract OrderDto toDto(OrderEntity entity);
+    public abstract OrderDto toDto(Order entity);
 
-    public abstract List<OrderDto> toDtos(List<OrderEntity> entities);
+    public abstract List<OrderDto> toDtos(List<Order> entities);
 
-    @Named("toItemDto")
-    public List<ItemDto> toItemDto(List<OrderItemEntity> orderItems) {
+    @Named("toItemDto") 
+    public List<ItemDto> toItemDto(List<OrderItem> orderItems) {
         return orderItems.stream()
-            .map(orderItem ->{
-                var item = orderItem.getId().getItem();
+            .map(orderItem -> {
+                var item = orderItem.getItem();
                 return new ItemDto(item.getId(), item.getTitle(), item.getDescription(), item.getPrice(), item.getImage(), orderItem.getQuantity());
             })
             .toList();
     }
 }
+

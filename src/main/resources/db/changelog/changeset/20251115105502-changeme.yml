@@ -17,7 +17,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: bigint
+                  type: bigserial
                   remarks: Идентификатор товара
                   constraints:
                     nullable: false

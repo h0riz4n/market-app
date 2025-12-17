@@ -65,7 +65,7 @@ public class ItemController {
         @PathVariable("id") @Positive Long id,
         @RequestParam EActionType action
     ) {
-        return itemService.upadteCart(id, action)
+        return itemService.updateCart(id, action)
             .map(item -> {
                 return Rendering.view("item")
                     .modelAttribute("item", itemMapper.toDto(item))
@@ -82,7 +82,7 @@ public class ItemController {
         @RequestParam(required = false, defaultValue = "1") @Positive Integer pageNumber,
         @RequestParam(required = false, defaultValue = "5") @Positive Integer pageSize
     ) {
-        return itemService.upadteCart(id, action)
+        return itemService.updateCart(id, action)
             .map(item -> {
                 URI redirectUri = UriComponentsBuilder.fromPath("/items")
                     .queryParam("search", search)

@@ -44,7 +44,7 @@ public class CartController {
         @RequestParam @Positive Long id,
         @RequestParam EActionType action
     ) {
-        return itemService.upadteCart(id, action)
+        return itemService.updateCart(id, action)
             .flatMap(item -> {
                 return itemService.getAllInCart()
                     .collectList()

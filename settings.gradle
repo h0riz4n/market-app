@@ -1,1 +1,1 @@
-rootProject.name = 'market-app'
+include('market-app', 'payment-service')

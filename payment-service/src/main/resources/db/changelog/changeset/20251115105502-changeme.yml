@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115105502"
+      author: Rustam Khudoyan
+      comment: Создание таблицы товаров
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: item
+            remarks: Таблица платежей
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  remarks: Идентификатор транзакции платежа
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: item_id_pk
+              - column:
+                  name: amount
+                  type: numeric(10, 2)
+                  remarks: Сумма оплаты
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_date_time
+                  type: timestamp(6)
+                  remarks: Дата и время оплаты
+                  constraints:
+                    nullable: false

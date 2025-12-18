@@ -1,0 +1,62 @@
+plugins {
+    id "java"
+    id "org.openapi.generator" version "7.16.0" apply false
+}
+
+subprojects {
+
+    apply plugin: "java"
+    apply plugin: "org.openapi.generator"
+
+    def openApiSpec = "$rootDir/resources/api-spec.yml"
+
+    tasks.register("generateOpenApiServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName.set("spring")
+        inputSpec.set(openApiSpec)
+        outputDir.set("$buildDir/generated/server")
+        apiPackage.set("ru.yandex.api")
+        modelPackage.set("ru.yandex.model")
+        invokerPackage.set("ru.yandex")
+        configOptions.set([
+            interfaceOnly  : "true",
+            reactive       : "true",
+            useSpringBoot3 : "true",
+            useJakartaEe   : "true",
+            openApiNullable: "false"
+        ])
+    }
+
+    tasks.register("generateOpenApiClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName.set("java")
+        library.set("webclient")
+        inputSpec.set(openApiSpec)
+        outputDir.set("$buildDir/generated/client")
+        apiPackage.set("ru.yandex.client.api")
+        modelPackage.set("ru.yandex.client.model")
+        invokerPackage.set("ru.yandex.client")
+        configOptions.set([
+            dateLibrary    : "java21",
+            useSpringBoot3 : "true",
+            openApiNullable: "false",
+            useJakartaEe   : "true"
+        ])
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs(
+                    "$buildDir/generated/server/src/main/java",
+                    "$buildDir/generated/client/src/main/java"
+                )
+            }
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        dependsOn(
+            tasks.generateOpenApiServer,
+            tasks.generateOpenApiClient
+        )
+    }
+}

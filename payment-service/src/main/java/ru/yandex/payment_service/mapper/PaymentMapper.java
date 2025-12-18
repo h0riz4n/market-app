@@ -1,10 +1,15 @@
 package ru.yandex.payment_service.mapper;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
-import ru.yandex.domain.PaymentRequest;
+import ru.yandex.domain.PaymentResponse;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import ru.yandex.payment_service.model.domain.Payment;
@@ -16,5 +21,12 @@ import ru.yandex.payment_service.model.domain.Payment;
 )
 public abstract class PaymentMapper {
 
-    public abstract PaymentRequest toDto(Payment entity);
+    @Mapping(target = "paymentDateTime", source = "entity.paymentDateTime", qualifiedByName = "toOffsetDateTime")
+    @Mapping(target = "transactionId", source = "entity.id")
+    public abstract PaymentResponse toDto(Payment entity);
+
+    @Named("toOffsetDateTime")
+    public OffsetDateTime toOffsetDateTime(LocalDateTime time) {
+        return time.atOffset(ZoneOffset.UTC);
+    }
 }

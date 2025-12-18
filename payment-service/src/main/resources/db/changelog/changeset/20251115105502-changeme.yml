@@ -2,11 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: "20251115105502"
       author: Rustam Khudoyan
-      comment: Создание таблицы товаров
+      comment: Создание таблицы платежей
       changes:
         - createTable:
             schemaName: ${schema}
-            tableName: item
+            tableName: payment
             remarks: Таблица платежей
             columns:
               - column:

@@ -36,7 +36,7 @@ public class Payment {
     public final boolean equals(Object o) { 
         if (this == o) return true;
         if (o == null) return false;
-        Class<?> oEffectiveClass = o.getClass(); 
+        Class<?> oEffectiveClass = o.getClass();
         Class<?> thisEffectiveClass = this.getClass(); 
         if (thisEffectiveClass != oEffectiveClass) return false; 
         Payment payment = (Payment) o; 

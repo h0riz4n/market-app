@@ -59,6 +59,10 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+tasks.compileJava {
+    dependsOn tasks.generateOpenApiClient
+}
+
 tasks.processResources {
 	filesMatching("**/application*.yml") {
         filter {

@@ -61,3 +61,4 @@ logging:
 market-app:
     default-database-schema: ${DB_SCHEMA:public}
     cors-origins: ${CORS_ORIGINS:*}
+    payment-service-host: ${PAYMENT_SERVICE_HOST:http://localhost:8080}

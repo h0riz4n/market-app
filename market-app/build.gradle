@@ -35,6 +35,7 @@ dependencies {
 	implementation 'org.mapstruct:mapstruct:1.6.3'
 	implementation 'net.lbruun.springboot:preliquibase-spring-boot-starter:1.6.0'
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13'
 
 	compileOnly 'org.projectlombok:lombok'
 
@@ -51,7 +52,7 @@ dependencies {
 	testImplementation 'org.testcontainers:postgresql'
 	testImplementation 'org.testcontainers:r2dbc'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-
+	testImplementation 'com.redis:testcontainers-redis:2.2.2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

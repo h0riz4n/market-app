@@ -11,4 +11,6 @@ import lombok.Setter;
 public class MarketAppProperty {
 
     private String[] corsOrigins;
+    
+    private String paymentServiceHost;
 }

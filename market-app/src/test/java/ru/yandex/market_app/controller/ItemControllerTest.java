@@ -14,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import ru.yandex.market_app.container.DatabaseContainerTest;
+import ru.yandex.market_app.container.RedisTestContainer;
 import ru.yandex.market_app.model.enums.EActionType;
 import ru.yandex.market_app.model.enums.ESortType;
 import ru.yandex.market_app.util.DataFactory;
@@ -21,7 +22,7 @@ import ru.yandex.market_app.util.DataFactory;
 
 @Tag("integration")
 @Testcontainers
-@ImportTestcontainers(DatabaseContainerTest.class)
+@ImportTestcontainers({DatabaseContainerTest.class, RedisTestContainer.class})
 @AutoConfigureWebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ItemControllerTest extends DataFactory {

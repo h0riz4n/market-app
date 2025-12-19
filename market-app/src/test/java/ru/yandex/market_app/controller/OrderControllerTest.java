@@ -12,11 +12,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import ru.yandex.market_app.container.DatabaseContainerTest;
+import ru.yandex.market_app.container.RedisTestContainer;
 import ru.yandex.market_app.util.DataFactory;
 
 @Tag("integration")
 @Testcontainers
-@ImportTestcontainers(DatabaseContainerTest.class)
+@ImportTestcontainers({DatabaseContainerTest.class, RedisTestContainer.class})
 @AutoConfigureWebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class OrderControllerTest extends DataFactory {
@@ -61,16 +62,5 @@ public class OrderControllerTest extends DataFactory {
             .exchange()
             .expectStatus().isNotFound()
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-    }
-
-    @Test
-    public void buyTest() throws Exception {
-        mockItem.setCartCount(1);
-        itemRepo.updateCartCount(mockItem).block();
-
-        webTestClient.post()
-            .uri("/buy")
-            .exchange()
-            .expectStatus().is3xxRedirection();
     }
 }

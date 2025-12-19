@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import ru.yandex.domain.PaymentResponse;
+import ru.yandex.model.PaymentResponse;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

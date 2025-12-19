@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import ru.yandex.api.ApiUtil;
 import ru.yandex.api.PaymentApi;
-import ru.yandex.domain.PaymentRequest;
-import ru.yandex.domain.PaymentResponse;
+import ru.yandex.model.PaymentRequest;
+import ru.yandex.model.PaymentResponse;
 import ru.yandex.payment_service.mapper.PaymentMapper;
 import ru.yandex.payment_service.service.PaymentService;
 
@@ -25,7 +25,7 @@ public class ApiController implements PaymentApi {
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
     
-    public Mono<ResponseEntity<PaymentResponse>> makePayment(
+    public Mono<ResponseEntity<ru.yandex.model.PaymentResponse>> makePayment(
         @Parameter(name = "PaymentRequest", description = "", required = true) @Valid @RequestBody Mono<PaymentRequest> paymentRequest,
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {

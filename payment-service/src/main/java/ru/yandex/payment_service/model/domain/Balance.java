@@ -1,7 +1,6 @@
 package ru.yandex.payment_service.model.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 import org.springframework.data.annotation.Id;
@@ -19,19 +18,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Table("payment")
-public class Payment {
+@Table(name = "balance")
+public class Balance {
 
     @Id
     @Column("id")
     private Long id;
 
-    @Column("amount")
-    private BigDecimal amount;
+    @Column("balance")
+    private BigDecimal balance;
 
-    @Column("payment_date_time")
-    private LocalDateTime paymentDateTime;  
-    
     @Override
     public final boolean equals(Object o) { 
         if (this == o) return true;
@@ -39,7 +35,7 @@ public class Payment {
         Class<?> oEffectiveClass = o.getClass();
         Class<?> thisEffectiveClass = this.getClass(); 
         if (thisEffectiveClass != oEffectiveClass) return false; 
-        Payment payment = (Payment) o; 
-        return getId() != null && Objects.equals(getId(), payment.getId()); 
+        Balance balance = (Balance) o; 
+        return getId() != null && Objects.equals(getId(), balance.getId()); 
     }
 }

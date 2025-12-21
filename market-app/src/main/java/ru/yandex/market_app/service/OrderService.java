@@ -2,7 +2,9 @@ package ru.yandex.market_app.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import ru.yandex.client.api.BalanceApi;
 import ru.yandex.client.api.PaymentApi;
 import ru.yandex.client.model.PaymentRequest;
 import ru.yandex.market_app.exception.ApiServiceException;
@@ -31,8 +34,9 @@ public class OrderService {
     private final String CACHE_NAME = "order";
 
     private final PaymentApi paymentApi;
+    private final BalanceApi balanceApi;
     private final ReactiveRedisTemplate<String, Order> redisTemplate;
-    private final TransactionalOperator tx;
+    private final TransactionalOperator transactionalOperator;
     private final OrderItemRepository orderItemRepo;
     private final OrderRepository orderRepo;
 
@@ -74,22 +78,37 @@ public class OrderService {
             .total(items.stream().mapToInt(item -> item.getPrice() * item.getCartCount()).sum())
             .build();
 
-        return tx.transactional(
-            orderRepo.save(newOrder).flatMap(order -> {
-                return orderItemRepo.saveAll(order, items)
-                    .collectList()
-                    .flatMap(orderItems -> { 
-                        PaymentRequest paymentRequest = new PaymentRequest()
-                            .amount(new BigDecimal(order.getTotal()));
-                        return paymentApi.makePayment(paymentRequest)
-                            .flatMap(paymentResponse -> {
-                                log.debug("Transaction id: {} at {}", paymentResponse.getTransactionId(), paymentResponse.getPaymentDateTime());
-                                return clearCache()
-                                    .thenReturn(order.toBuilder().items(orderItems).build());
-                            });
-                    });
+        return balanceApi.getBalance()
+            .flatMap(balance -> {
+                var amount = new BigDecimal(newOrder.getTotal());
+                if (amount.compareTo(balance.getBalance()) > 0) {
+                    return Mono.error(new RuntimeException("Недостаточно средств"));
+                }
+                
+                PaymentRequest paymentRequest = new PaymentRequest()
+                    .amount(new BigDecimal(newOrder.getTotal()));
+
+                return paymentApi.makePayment(paymentRequest);
             })
-        );
+            .flatMap(payment -> buy(items, newOrder));
+    }
+
+    private Mono<Order> buy(List<Item> items, Order newOrder) {
+        return inTransaction(() -> {
+            return orderRepo.save(newOrder)
+                .flatMap(order -> {
+                    return orderItemRepo.saveAll(order, items)
+                        .collectList()
+                        .flatMap(orderItems -> { 
+                            return clearCache()
+                                .thenReturn(order.toBuilder().items(orderItems).build());
+                        });
+                });
+        });
+    }
+
+    private <T> Mono<T> inTransaction(Supplier<Mono<T>> supplier) {
+        return transactionalOperator.transactional(Mono.defer(supplier));
     }
 
     private Mono<Void> clearCache() {

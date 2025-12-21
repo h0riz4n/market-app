@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.RequiredArgsConstructor;
 import ru.yandex.client.ApiClient;
+import ru.yandex.client.api.BalanceApi;
 import ru.yandex.client.api.PaymentApi;
 import ru.yandex.market_app.property.MarketAppProperty;
  
@@ -35,8 +36,13 @@ public class WebConfiguration implements WebFluxConfigurer {
     }
 
     @Bean
-    public PaymentApi paymentApi(ApiClient paymentApiClient) {
-        return new PaymentApi(paymentApiClient);
+    public PaymentApi paymentApi(ApiClient apiClient) {
+        return new PaymentApi(apiClient);
+    }
+
+    @Bean
+    public BalanceApi balanceApi(ApiClient apiClient) {
+        return new BalanceApi(apiClient);
     }
 
     @Bean

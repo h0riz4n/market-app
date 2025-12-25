@@ -1,0 +1,52 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: '@name@'
+
+  servlet:
+      multipart:
+          max-file-size: 5MB
+          max-request-size: 10MB
+
+  jackson:
+      mapper:
+          DEFAULT_VIEW_INCLUSION: true
+
+  output:
+      ansi:
+          enabled: ALWAYS
+
+  r2dbc:
+      url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:test}
+      username: ${DB_USER:}
+      password: ${DB_PASSWORD:}
+      properties:
+          schema: ${DB_SCHEMA:public}
+      pool:
+          enabled: true
+          initial-size: 5
+          max-size: 11
+          max-idle-time: 30s
+          max-life-time: 10m
+          validation-query: SELECT 1  
+
+  liquibase:
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:test}
+      user: ${DB_USER:}
+      password: ${DB_PASSWORD:}
+      enabled: true
+      change-log: classpath:/db/changelog/db.changelog-master.yml
+      default-schema: ${payment-service.default-database-schema}
+      parameters:
+          schema: ${payment-service.default-database-schema}
+
+logging:
+  level:
+    org.springframework.data.r2dbc: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+
+payment-service:
+    default-database-schema: ${DB_SCHEMA:public}
+    cors-origins: ${CORS_ORIGINS:*}

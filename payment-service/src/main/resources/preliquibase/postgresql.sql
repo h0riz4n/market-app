@@ -1,0 +1,1 @@
+create schema if not exists ${payment-service.default-database-schema};

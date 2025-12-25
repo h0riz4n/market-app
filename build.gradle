@@ -1,71 +1,128 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.1'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id "java"
+    id "org.openapi.generator" version "7.16.0" apply false
+    id "org.springframework.boot" version "3.5.1" apply false
+    id "io.spring.dependency-management" version "1.1.7" apply false
 }
 
-group = 'ru.yandex'
-version = '0.0.1-SNAPSHOT'
-description = 'Market App'
+subprojects {
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
+    apply plugin: "java"
+    apply plugin: "org.openapi.generator"
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
+    def openApiSpec = "$rootDir/resources/api-spec.yml"
 
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-jooq'
-	implementation 'org.liquibase:liquibase-core:4.31.1'
-	implementation 'org.mapstruct:mapstruct:1.6.3'
-	implementation 'net.lbruun.springboot:preliquibase-spring-boot-starter:1.6.0'
-	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
-
-	compileOnly 'org.projectlombok:lombok'
-
-	runtimeOnly 'org.postgresql:postgresql'
-	runtimeOnly 'org.postgresql:r2dbc-postgresql'
-
-	annotationProcessor 'org.projectlombok:lombok'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.testcontainers:testcontainers'
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.testcontainers:postgresql'
-	testImplementation 'org.testcontainers:r2dbc'
-	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-tasks.processResources {
-	filesMatching("**/application*.yml") {
-        filter {
-            it.replaceAll('@name@', project.name)
-            	.replaceAll('@version@', project.version)
-               	.replaceAll('@group@', project.group)
-               	.replaceAll('@description@', project.description)
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
         }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    tasks.register("generateOpenApiServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName.set("spring")
+        inputSpec.set(openApiSpec)
+        outputDir.set("$buildDir/generated/server")
+        apiPackage.set("ru.yandex.api")
+        modelPackage.set("ru.yandex.model")
+        invokerPackage.set("ru.yandex")
+        configOptions.set([
+            interfaceOnly  : "true",
+            reactive       : "true",
+            useSpringBoot3 : "true",
+            useJakartaEe   : "true",
+            openApiNullable: "false"
+        ])
+    }
+
+    tasks.register("generateOpenApiClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName.set("java")
+        library.set("webclient")
+        inputSpec.set(openApiSpec)
+        outputDir.set("$buildDir/generated/client")
+        apiPackage.set("ru.yandex.client.api")
+        modelPackage.set("ru.yandex.client.model")
+        invokerPackage.set("ru.yandex.client")
+        configOptions.set([
+            dateLibrary    : "java21",
+            useSpringBoot3 : "true",
+            openApiNullable: "false",
+            useJakartaEe   : "true"
+        ])
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs(
+                    "$buildDir/generated/server/src/main/java",
+                    "$buildDir/generated/client/src/main/java"
+                )
+            }
+        }
+    }
+
+    tasks.processResources {
+        filesMatching("**/application*.yml") {
+            filter {
+                it.replaceAll('@name@', project.name)
+                    .replaceAll('@version@', project.version)
+                    .replaceAll('@group@', project.group)
+                    .replaceAll('@description@', project.description)
+            }
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        dependsOn(
+            tasks.generateOpenApiServer,
+            tasks.generateOpenApiClient
+        )
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-webflux'
+        implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+        implementation 'org.liquibase:liquibase-core:4.31.1'
+        implementation 'org.mapstruct:mapstruct:1.6.3'
+        implementation 'net.lbruun.springboot:preliquibase-spring-boot-starter:1.6.0'
+        implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+        implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13'
+
+        compileOnly 'org.projectlombok:lombok'
+
+        runtimeOnly 'org.postgresql:postgresql'
+        runtimeOnly 'org.postgresql:r2dbc-postgresql'
+
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+        testImplementation 'com.redis:testcontainers-redis:2.2.2'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'io.projectreactor:reactor-test'
+        testImplementation 'org.testcontainers:testcontainers'
+        testImplementation 'org.testcontainers:junit-jupiter'
+        testImplementation 'org.testcontainers:postgresql'
+        testImplementation 'org.testcontainers:r2dbc'
+        testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 }

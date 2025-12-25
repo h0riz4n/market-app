@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: Payment API
+  version: 1.0.0
+paths:
+  /payment:
+    post:
+      summary: Оплата
+      description: POST API запрос на совершение платежа
+      operationId: makePayment
+      tags:
+        - Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Платёж успешно прошёл
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Запрос не прошёл валидацию
+        '500':
+          description: Внутренняя ошибка сервера
+  /balance:
+    get:
+      summary: Получение баланса
+      description: GET API запрос на получение баланса
+      operationId: getBalance
+      tags:
+        - Balance
+      responses:
+        '200':
+          description: Баланс пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: decimal
+          example: "100.50"
+          x-java-type: java.math.BigDecimal
+      required:
+        - amount
+    PaymentResponse:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+          format: int64
+          example: 1
+        paymentDateTime:
+          type: string
+          format: date-time
+          x-java-type: java.time.LocalDateTime
+    BalanceResponse:
+      type: object
+      properties:
+        balance:
+          type: number
+          format: decimal
+          example: "100.50"
+          x-java-type: java.math.BigDecimal

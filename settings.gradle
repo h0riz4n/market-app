@@ -1,1 +1,2 @@
 include('market-app', 'payment-service')
+rootProject.name = "market-app-global-app"

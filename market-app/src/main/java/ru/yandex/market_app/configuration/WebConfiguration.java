@@ -1,5 +1,10 @@
 package ru.yandex.market_app.configuration;
 
+import javax.sql.DataSource;
+
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +31,11 @@ public class WebConfiguration implements WebFluxConfigurer {
             .allowedOrigins(property.getCorsOrigins()) 
             .allowedMethods("*")
             .allowedHeaders("*");    
+    }
+
+    @Bean
+    public DSLContext dslContext(DataSource dataSource) {
+        return DSL.using(dataSource, SQLDialect.POSTGRES);
     }
 
     @Bean

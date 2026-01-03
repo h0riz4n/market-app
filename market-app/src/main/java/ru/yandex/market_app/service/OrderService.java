@@ -2,10 +2,10 @@ package ru.yandex.market_app.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.jooq.DSLContext;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.http.HttpStatus;
@@ -32,7 +32,7 @@ public class OrderService {
 
     private final Duration TTL = Duration.ofMinutes(5);
     private final String CACHE_NAME = "order";
-
+    private final DSLContext dsl;
     private final PaymentApi paymentApi;
     private final BalanceApi balanceApi;
     private final ReactiveRedisTemplate<String, Order> redisTemplate;

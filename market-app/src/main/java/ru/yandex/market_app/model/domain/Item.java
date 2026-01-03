@@ -41,7 +41,7 @@ public class Item {
     private Integer cartCount = 0;
 
     @Override 
-    public final boolean equals(Object o) { 
+    public final boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
         Class<?> oEffectiveClass = o.getClass(); 

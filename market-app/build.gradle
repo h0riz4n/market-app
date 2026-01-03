@@ -1,7 +1,10 @@
+import nu.studer.gradle.jooq.JooqEdition
+
 plugins {
 	id 'java'
-	id "org.springframework.boot"
-	id "io.spring.dependency-management"
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+	id 'nu.studer.jooq' version '10.2'
 }
 
 group = 'ru.yandex'
@@ -10,5 +13,72 @@ description = 'Market App'
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-	testImplementation 'com.redis:testcontainers-redis:2.2.2'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    jooqGenerator 'org.postgresql:postgresql:42.7.8'
+    testImplementation 'com.redis:testcontainers-redis:2.2.2'
 }
+
+jooq {
+    version = ''
+    edition = JooqEdition.OSS
+    
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.DEBUG
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = 'jdbc:postgresql://localhost:5432/test_db'
+                    user = 'postgres'
+                    password = '2003'
+                }
+
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        inputSchema = 'market_app_v2'
+                        forcedTypes {
+                            forcedType {
+                                name = 'varchar'
+                                includeExpression = '.*'
+                                includeTypes = 'JSONB?'
+                            }
+                            forcedType {
+                                name = 'varchar'
+                                includeExpression = '.*'
+                                includeTypes = 'INET'
+                            }
+                        }
+                    }
+
+                    generate {
+                        deprecated = false
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+
+                    target {
+                        packageName = 'ru.yandex.market_app.model.jooq'
+                    }
+                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                }
+            }
+        }
+    }
+}
+
+// tasks.named("compileJava") {
+//     dependsOn(tasks.named("generateJooq"))
+// }
+
+// tasks.named('generateJooq').configure {
+//     launcher = javaToolchains.launcherFor {
+//         languageVersion = JavaLanguageVersion.of(21)
+//     }
+// }
+
+// tasks.named('generateJooq').configure { 
+//     allInputsDeclared = true 
+// }

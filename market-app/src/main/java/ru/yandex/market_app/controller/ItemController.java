@@ -15,19 +15,25 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import ru.yandex.market_app.mapper.ItemMapper;
 import ru.yandex.market_app.model.dto.ItemDto;
 import ru.yandex.market_app.model.enums.EActionType;
 import ru.yandex.market_app.model.enums.ESortType;
+import ru.yandex.market_app.service.CartService;
 import ru.yandex.market_app.service.ItemService;
+
 import org.springframework.web.bind.annotation.PostMapping;
 
+@Slf4j
 @Controller
 @Validated
 @RequiredArgsConstructor
 public class ItemController {
-    
+
+    private final CartService cartService;
+
     private final ItemService itemService;
     private final ItemMapper itemMapper;
 
@@ -63,9 +69,16 @@ public class ItemController {
     @PostMapping("/items/{id}")
     public Mono<Rendering> updateCart(
         @PathVariable("id") @Positive Long id,
-        @RequestParam EActionType action
+        @RequestParam("action") EActionType action
     ) {
-        return itemService.updateCart(id, action)
+        return itemService.getById(id)
+            .flatMap(item -> {
+                return cartService.updateCart(id, action)
+                    .map(cart -> {
+                        item.setCartCount(cart.getCount());
+                        return item;
+                    });
+            })
             .map(item -> {
                 return Rendering.view("item")
                     .modelAttribute("item", itemMapper.toDto(item))
@@ -82,7 +95,14 @@ public class ItemController {
         @RequestParam(required = false, defaultValue = "1") @Positive Integer pageNumber,
         @RequestParam(required = false, defaultValue = "5") @Positive Integer pageSize
     ) {
-        return itemService.updateCart(id, action)
+        return itemService.getById(id)
+            .flatMap(item -> {
+                return cartService.updateCart(id, action)
+                    .map(cart -> {
+                        item.setCartCount(cart.getCount());
+                        return item;
+                    });
+            })
             .map(item -> {
                 URI redirectUri = UriComponentsBuilder.fromPath("/items")
                     .queryParam("search", search)

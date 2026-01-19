@@ -8,8 +8,8 @@ import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import ru.yandex.market_app.mapper.OrderMapper;
-import ru.yandex.market_app.model.domain.Item;
-import ru.yandex.market_app.service.ItemService;
+import ru.yandex.market_app.model.domain.Cart;
+import ru.yandex.market_app.service.CartService;
 import ru.yandex.market_app.service.OrderService;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,10 +28,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 @RequiredArgsConstructor
 public class OrderController {
 
+    private final CartService cartService;
     private final OrderService orderService;
-    private final OrderMapper orderMapper;
 
-    private final ItemService itemService;
+    private final OrderMapper orderMapper;
 
     @GetMapping("/orders")
     public Mono<Rendering> getAll() {
@@ -60,15 +60,15 @@ public class OrderController {
 
     @PostMapping("/buy")
     public Mono<String> buy() {
-        return itemService.getAllInCart()
+        return cartService.getCart()
             .collectList()
             .flatMap(this::redirect);
     }
 
-    private Mono<String> redirect(List<Item> items) {
-        return orderService.buy(items)
+    private Mono<String> redirect(List<Cart> carts) {
+        return orderService.buy(carts)
             .flatMap(order -> {
-                return itemService.resetCart().then(Mono.fromSupplier(() -> {
+                return cartService.resetCart().then(Mono.fromSupplier(() -> {
                     URI redirectUri = UriComponentsBuilder.fromPath("/orders/{id}")
                         .queryParam("newOrder", true)
                         .build(order.getId()); 

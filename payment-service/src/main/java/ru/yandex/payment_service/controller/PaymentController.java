@@ -22,12 +22,13 @@ public class PaymentController implements PaymentApi {
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
     
+    @Override
     public Mono<ResponseEntity<PaymentResponse>> makePayment(
         @Parameter(name = "PaymentRequest", description = "", required = true) @Valid @RequestBody Mono<PaymentRequest> paymentRequest,
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         return paymentRequest
-            .flatMap(req -> paymentService.pay(req.getAmount()))
+            .flatMap(req -> paymentService.pay(req.getBalanceId(), req.getAmount()))
             .map(paymentMapper::toDto)
             .map(ResponseEntity::ok);
     }

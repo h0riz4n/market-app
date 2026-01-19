@@ -12,5 +12,5 @@ public record ItemDto (
 
     String imgPath,
 
-    Integer count
+    Long count
 ) { }

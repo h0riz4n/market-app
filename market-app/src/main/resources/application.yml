@@ -25,7 +25,7 @@ spring:
         username: ${DB_USER:}
         password: ${DB_PASSWORD:}
         properties:
-            schema: ${DB_SCHEMA:public}
+            schema: ${market-app.default-database-schema}
         pool:
             enabled: true
             initial-size: 5
@@ -51,10 +51,39 @@ spring:
         change-log: classpath:/db/changelog/db.changelog-master.yml
         default-schema: ${market-app.default-database-schema}
         parameters:
-            schema: ${market-app.default-database-schema}
+            schema: ${market-app.default-database-schema}        
+
+    security:
+        oauth2:
+            client:
+                provider:
+                    keycloak:
+                        issuer-uri: ${OAUTH_ISSUER_URI}
+                        token-uri: ${OAUTH_ISSUER_URI}/protocol/openid-connect/token
+                        authorization-uri: ${OAUTH_ISSUER_URI}/protocol/openid-connect/auth
+                    payment-service:
+                        issuer-uri: ${OAUTH_ISSUER_URI}
+                        token-uri: ${OAUTH_ISSUER_URI}/protocol/openid-connect/token
+                registration:
+                    keycloak:
+                        authorizationGrantType: authorization_code
+                        provider: keycloak
+                        client-id: ${OAUTH_CLIENT_ID}
+                        client-secret: ${OAUTH_CLIENT_SECRET}
+                        redirect-uri: '{baseUrl}/{action}/oauth2/code/{registrationId}'
+                        scope: openid, profile, email
+                    payment-service:
+                        authorization-grant-type: client_credentials
+                        provider: payment-service
+                        client-id: ${OAUTH_CLIENT_ID}
+                        client-secret: ${OAUTH_CLIENT_SECRET}
+                        scope: openid
+
 
 logging:
   level:
+    org.springframework.web.reactive.function.client.ExchangeFunctions: TRACE
+    org.springframework.security.oauth2.client: DEBUG
     org.springframework.data.r2dbc: DEBUG
     io.r2dbc.postgresql.QUERY: DEBUG
 

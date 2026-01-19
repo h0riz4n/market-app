@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 import ru.yandex.market_app.model.domain.Item;
 import ru.yandex.market_app.model.domain.Order;
+import ru.yandex.market_app.repository.CartRepository;
 import ru.yandex.market_app.repository.ItemRepository;
 import ru.yandex.market_app.repository.OrderItemRepository;
 import ru.yandex.market_app.repository.OrderRepository;
@@ -17,6 +18,9 @@ public class DataFactory {
 
     @Autowired
     protected ItemRepository itemRepo;
+
+    @Autowired
+    protected CartRepository cartRepo;
 
     @Autowired
     protected OrderRepository orderRepo;

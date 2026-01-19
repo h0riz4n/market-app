@@ -13,8 +13,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ru.yandex.model.PaymentRequest;
 import ru.yandex.payment_service.container.DatabaseContainerTest;
 

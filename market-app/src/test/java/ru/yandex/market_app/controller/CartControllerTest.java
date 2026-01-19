@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -18,8 +19,8 @@ import ru.yandex.market_app.util.DataFactory;
 
 @Tag("integration")
 @Testcontainers
-@ImportTestcontainers({DatabaseContainerTest.class, RedisTestContainer.class})
 @AutoConfigureWebTestClient
+@ImportTestcontainers({DatabaseContainerTest.class, RedisTestContainer.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CartControllerTest extends DataFactory {
 
@@ -27,6 +28,7 @@ public class CartControllerTest extends DataFactory {
     private WebTestClient webTestClient;
  
     @Test
+    @WithMockUser
     public void getCartTest() throws Exception {
         webTestClient.get()
             .uri("/cart/items")
@@ -36,6 +38,7 @@ public class CartControllerTest extends DataFactory {
     }
 
     @Test
+    @WithMockUser
     public void updateCartTest() throws Exception {
         var mockRequest = UriComponentsBuilder.fromUriString("/cart/items")
             .queryParam("id", mockItem.getId().toString())

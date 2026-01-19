@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251115110002"
+      author: Rustam Khudoyan
+      comment: Создание таблицы корзин
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: cart
+            remarks: Таблица корзин
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+                  remarks: Идентификатор пользователя
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: cart_pk
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: users
+                    referencedColumnNames: id
+                    foreignKeyName: user_fk
+                    deleteCascade: true
+              - column:
+                  name: item_id
+                  type: bigint
+                  remarks: Идентификатор товара
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: cart_pk
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: item
+                    referencedColumnNames: id
+                    foreignKeyName: item_fk
+                    deleteCascade: true
+              - column:
+                  name: count
+                  type: bigint
+                  remarks: Количество товара в корзине
+                  constraints:
+                    nullable: false

@@ -47,10 +47,3 @@ databaseChangeLog:
                   remarks: Путь до изображения
                   constraints:
                     nullable: false
-              - column:
-                  name: cart_count
-                  type: int
-                  defaultValue: "0"
-                  remarks: Количество товара в корзине
-                  constraints:
-                    nullable: false

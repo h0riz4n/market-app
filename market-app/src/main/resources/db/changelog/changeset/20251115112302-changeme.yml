@@ -23,8 +23,25 @@ databaseChangeLog:
                     primaryKey: true
                     primaryKeyName: order_id_pk
               - column:
+                  name: user_id
+                  type: uuid
+                  remarks: Идентификатор пользователя
+                  constraints:
+                    nullable: false
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: users
+                    referencedColumnNames: id
+                    foreignKeyName: order_user_fk
+                    deleteCascade: true
+              - column:
                   name: total
                   type: int
                   remarks: Сумма заказа
+                  constraints:
+                    nullable: false
+              - column:
+                  name: creation_date_time
+                  type: timestamp(6)
+                  remarks: Дата и время создания записи
                   constraints:
                     nullable: false

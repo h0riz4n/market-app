@@ -15,7 +15,7 @@ import ru.yandex.market_app.repository.OrderItemRepository;
 
 @Repository
 public class OrderItemRepositoryImpl implements OrderItemRepository {
-
+    
     private final DatabaseClient databaseClient;
     private final String schema;
 

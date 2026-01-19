@@ -18,6 +18,17 @@ databaseChangeLog:
                     primaryKey: true
                     primaryKeyName: item_id_pk
               - column:
+                  name: balance_id
+                  type: bigint
+                  remarks: Идентификатор баланса
+                  constraints:
+                    nullable: false
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: balance
+                    referencedColumnNames: id
+                    foreignKeyName: payment_balance_fk
+                    deleteCascade: true
+              - column:
                   name: amount
                   type: numeric(10, 2)
                   remarks: Сумма оплаты

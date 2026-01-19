@@ -2,7 +2,6 @@ package ru.yandex.market_app.repository.impl;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -12,24 +11,17 @@ import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.market_app.model.domain.Item;
 import ru.yandex.market_app.repository.ItemRepository;
 
 @Repository
-public class ItemRepositoryImpl implements ItemRepository{
+@RequiredArgsConstructor
+public class ItemRepositoryImpl implements ItemRepository {
 
-    private final String schema;
     private final R2dbcEntityTemplate entityTemplate;
-
-    public ItemRepositoryImpl(
-        @Value("${market-app.default-database-schema}") String schema,
-        R2dbcEntityTemplate entityTemplate
-    ) {
-        this.schema = schema;
-        this.entityTemplate = entityTemplate;
-    }
 
     @Override
     public Mono<Item> findById(Long id) {
@@ -85,7 +77,7 @@ public class ItemRepositoryImpl implements ItemRepository{
     public Mono<Long> updateCartCount(Item item) {
         return entityTemplate.update(
             Query.query(Criteria.where("id").is(item.getId())), 
-            Update.update("cart_count", item.getCartCount()), 
+            Update.update("cart_count", 1), 
             Item.class
         );
     }

@@ -1,9 +1,11 @@
 package ru.yandex.market_app.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -19,7 +21,7 @@ import ru.yandex.market_app.repository.OrderRepository;
 
 @Repository
 public class OrderRepositoryImpl implements OrderRepository {
-
+    
     private final DatabaseClient databaseClient;
     private final String schema;
 
@@ -32,7 +34,7 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
     
     @Override
-    public Flux<Order> findAll() {
+    public Flux<Order> findAllByUserId(UUID userId) {
         var sql = """
             SELECT 
                 o.id AS order_id,
@@ -42,27 +44,29 @@ public class OrderRepositoryImpl implements OrderRepository {
                 i.title AS title,
                 i.description AS description,
                 i.price AS price,
-                i.image AS image,
-                i.cart_count AS cart_count
+                i.image AS image
             FROM %1$s.order o
             LEFT JOIN %1$s.order_item oi
             ON oi.order_id = o.id
             LEFT JOIN %1$s.item i
             ON oi.item_id = i.id
+            LEFT JOIN %1$s.cart c
+            ON c.user_id = o.user_id
+            WHERE o.user_id = :userId
             """;
 
         return databaseClient.sql(sql.formatted(schema))
+            .bind("userId", userId)
             .map((row, metadata) -> {
                 return Map.of(
                     "orderId", row.get("order_id", Long.class),
                     "total", row.get("total", Integer.class),
-                    "quantity", row.get("quantity", Integer.class),
+                    "quantity", row.get("quantity", Long.class),
                     "itemId", row.get("item_id", Long.class),
                     "title", row.get("title", String.class),
                     "description", row.get("description", String.class),
                     "price", row.get("price", Integer.class),
-                    "image", row.get("image", String.class),
-                    "cartCount", row.get("cart_count", Integer.class)
+                    "image", row.get("image", String.class)
                 );
             })
             .all()
@@ -80,13 +84,14 @@ public class OrderRepositoryImpl implements OrderRepository {
             SELECT
                 o.id AS order_id,
                 o.total AS total,
+                o.user_id AS user_id,
+                o.creation_date_time AS creation_date_time,
                 oi.quantity AS quantity,
                 i.id AS item_id,
                 i.title AS title,
                 i.description AS description,
                 i.price AS price,
-                i.image AS image,
-                i.cart_count AS cart_count
+                i.image AS image
             FROM %1$s.order o
             LEFT JOIN %1$s.order_item oi
             ON oi.order_id = o.id
@@ -101,13 +106,14 @@ public class OrderRepositoryImpl implements OrderRepository {
                 return Map.of(
                     "orderId", row.get("order_id", Long.class),
                     "total", row.get("total", Integer.class),
-                    "quantity", row.get("quantity", Integer.class),
+                    "userId", row.get("user_id", UUID.class),
+                    "creationDateTime", row.get("creation_date_time", LocalDateTime.class),
+                    "quantity", row.get("quantity", Long.class),
                     "itemId", row.get("item_id", Long.class),
                     "title", row.get("title", String.class),
                     "description", row.get("description", String.class),
                     "price", row.get("price", Integer.class),
-                    "image", row.get("image", String.class),
-                    "cartCount", row.get("cart_count", Integer.class)
+                    "image", row.get("image", String.class)
                 );
             })
             .all()
@@ -121,6 +127,8 @@ public class OrderRepositoryImpl implements OrderRepository {
                         return Order.builder()
                             .id(currentOrderId)
                             .total((Integer) row.get("total"))
+                            .userId((UUID) row.get("userId"))
+                            .creationDateTime((LocalDateTime) row.get("creationDateTime"))
                             .items(new ArrayList<>())
                             .build();
                     });
@@ -155,13 +163,14 @@ public class OrderRepositoryImpl implements OrderRepository {
             .price((Integer) row.get("price"))
             .description((String) row.get("description"))
             .image((String) row.get("image"))
+            .cartCount((Long) row.get("quantity"))
             .build();
     }
 
     private OrderItem toOrderItem(Map<String, ?> row, Item item) {
         return OrderItem.builder()
             .id(new OrderItemId((Long) row.get("orderId"), (Long) row.get("itemId")))
-            .quantity((Integer) row.get("quantity"))
+            .quantity((Long) row.get("quantity"))
             .item(item)
             .build();
     }
@@ -169,13 +178,15 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Mono<Order> save(Order order) {
         var sql = """
-            INSERT INTO %1$s."order" (total) 
-            VALUES (:total) 
+            INSERT INTO %1$s."order" (user_id, total, creation_date_time) 
+            VALUES (:userId, :total, :creationDateTime) 
             RETURNING id
             """;
 
         return databaseClient.sql(sql.formatted(schema))
+            .bind("userId", order.getUserId())
             .bind("total", order.getTotal())
+            .bind("creationDateTime", order.getCreationDateTime())
             .map((row, metadata) -> {
                 return order.toBuilder()
                     .id(row.get("id", Long.class))

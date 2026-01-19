@@ -3,16 +3,19 @@ package ru.yandex.market_app.configuration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.config.CorsRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.client.ApiClient;
 import ru.yandex.client.api.BalanceApi;
 import ru.yandex.client.api.PaymentApi;
 import ru.yandex.market_app.property.MarketAppProperty;
  
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(MarketAppProperty.class)
@@ -46,9 +49,13 @@ public class WebConfiguration implements WebFluxConfigurer {
     }
 
     @Bean
-    public WebClient webClient(WebClient.Builder builder) {
+    public WebClient webClient(
+        WebClient.Builder builder, 
+        ServerOAuth2AuthorizedClientExchangeFilterFunction oAuth2Filter
+    ) {
         return builder
             .baseUrl(property.getPaymentServiceHost())
+            .filter(oAuth2Filter)
             .build();
     }
 }

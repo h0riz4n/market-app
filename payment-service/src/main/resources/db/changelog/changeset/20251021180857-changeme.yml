@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251221180857"
+      author: Rustam Khudoyan
+      comment: Создание таблицы баланса платёжного счёта
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: balance
+            remarks: Таблица баланса
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  remarks: Идентификатор платёжного счёта
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: balance_id_pk
+              - column:
+                  name: user_id
+                  type: uuid
+                  remarks: Идентификатор пользователя
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: balance
+                  type: numeric(10, 2)
+                  remarks: Сумма денег на балансе
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  remarks: Версионирование записи для оптимистической блокировки
+                  defaultValue: "0"
+                  constraints:
+                    nullable: false

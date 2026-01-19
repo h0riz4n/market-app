@@ -32,7 +32,7 @@ public abstract class OrderMapper {
         return orderItems.stream()
             .map(orderItem -> {
                 var item = orderItem.getItem();
-                return new ItemDto(item.getId(), item.getTitle(), item.getDescription(), item.getPrice(), item.getImage(), orderItem.getQuantity());
+                return new ItemDto(item.getId(), item.getTitle(), item.getDescription(), item.getPrice(), item.getImage(), item.getCartCount());
             })
             .toList();
     }

@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: "20251114120030"
+      author: Rustam Khudoyan
+      comment: Создание таблицы пользователя
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: users
+            remarks: Таблица пользователей
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: Идентификатор пользователя
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: user_pk
+              - column:
+                  name: creation_date_time
+                  type: timestamp(6)
+                  remarks: Дата и время создания записи
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_action_date_time
+                  type: timestamp(6)
+                  remarks: Дата и время последней активности пользователя
+                  constraints:
+                    nullable: false

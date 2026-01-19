@@ -2,8 +2,10 @@ package ru.yandex.payment_service.model.domain;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -25,8 +27,15 @@ public class Balance {
     @Column("id")
     private Long id;
 
+    @Column("user_id")
+    private UUID userId;
+
     @Column("balance")
     private BigDecimal balance;
+
+    @Version
+    @Column("version")
+    private Long version;
 
     @Override
     public final boolean equals(Object o) { 

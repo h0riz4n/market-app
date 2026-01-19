@@ -1,9 +1,11 @@
 package ru.yandex.market_app.model.domain;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -26,7 +28,14 @@ import lombok.Setter;
 public class Order implements Serializable {
 
     @Id
+    @Column("id")
     private Long id;
+
+    @Column("user_id")
+    private UUID userId;
+
+    @Column("creation_date_time")
+    private LocalDateTime creationDateTime;
 
     @Column("total")
     private Integer total;

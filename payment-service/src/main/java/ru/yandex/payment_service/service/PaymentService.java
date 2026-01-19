@@ -2,7 +2,6 @@ package ru.yandex.payment_service.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -17,19 +16,19 @@ import ru.yandex.payment_service.repository.PaymentRepository;
 public class PaymentService {
 
     private final BalanceService balanceService;
+
     private final PaymentRepository paymentRepo;
     private final TransactionalOperator transactionalOperator;
 
-    public Mono<Payment> pay(BigDecimal amount) {
+    public Mono<Payment> pay(Long balanceId, BigDecimal amount) {
         var payment = Payment.builder()
+            .balanceId(balanceId)
             .amount(amount)
             .paymentDateTime(LocalDateTime.now())
             .build();
-
-        return inTransaction(() -> balanceService.withdraw(amount).then(paymentRepo.save(payment)));
-    }
-
-    private <T> Mono<T> inTransaction(Supplier<Mono<T>> supplier) {
-        return transactionalOperator.transactional(Mono.defer(supplier));
+        return transactionalOperator.transactional(
+            balanceService.withdraw(balanceId, amount)
+                .then(paymentRepo.save(payment))
+        );
     }
 }

@@ -26,6 +26,9 @@ public class Payment {
     @Column("id")
     private Long id;
 
+    @Column("balance_id")
+    private Long balanceId;
+
     @Column("amount")
     private BigDecimal amount;
 

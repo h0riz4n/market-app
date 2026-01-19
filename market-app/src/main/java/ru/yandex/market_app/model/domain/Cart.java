@@ -1,49 +1,39 @@
 package ru.yandex.market_app.model.domain;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.yandex.market_app.model.domain.id.CartId;
 
 @Getter
 @Setter
-@Table("order")
+@Table("cart")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class Order implements Serializable {
+public class Cart implements Serializable {
 
     @Id
-    @Column("id")
-    private Long id;
+    @Embedded.Nullable
+    private CartId id;
 
-    @Column("user_id")
-    private UUID userId;
+    @Column("count")
+    private Long count;
 
-    @Column("creation_date_time")
-    private LocalDateTime creationDateTime;
-
-    @Column("total")
-    private Integer total;
-
-    @Default
     @Transient
-    private List<OrderItem> items = new ArrayList<>();
-    
+    private Item item;
+
     @Override 
     public final boolean equals(Object o) { 
         if (this == o) return true;
@@ -51,8 +41,8 @@ public class Order implements Serializable {
         Class<?> oEffectiveClass = o.getClass(); 
         Class<?> thisEffectiveClass = this.getClass(); 
         if (thisEffectiveClass != oEffectiveClass) return false; 
-        Order order = (Order) o; 
-        return getId() != null && Objects.equals(getId(), order.getId()); 
+        Cart cart = (Cart) o; 
+        return getId() != null && Objects.equals(getId(), cart.getId()); 
     }
     
     @Override 

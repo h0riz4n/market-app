@@ -1,8 +1,10 @@
 package ru.yandex.market_app.model.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -19,9 +21,10 @@ import lombok.Builder.Default;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Item {
+public class Item implements Serializable {
 
     @Id
+    @Column("id")
     private Long id;
 
     @Column("title")
@@ -37,8 +40,8 @@ public class Item {
     private Integer price;
 
     @Default
-    @Column("cart_count")
-    private Integer cartCount = 0;
+    @Transient
+    private Long cartCount = 0L;
 
     @Override 
     public final boolean equals(Object o) { 

@@ -1,5 +1,6 @@
 package ru.yandex.market_app.model.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.springframework.data.annotation.Id;
@@ -19,14 +20,14 @@ import ru.yandex.market_app.model.domain.id.OrderItemId;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderItem {
+public class OrderItem implements Serializable {
 
     @Id
     @Embedded.Nullable
     private OrderItemId id;
 
     @Column("quantity")
-    private Integer quantity;
+    private Long quantity;
 
     @Transient
     private Item item;

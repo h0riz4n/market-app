@@ -12,7 +12,7 @@ import ru.yandex.market_app.model.filter.ItemFilterModel;
 @NoArgsConstructor
 public class ItemSpecification {
 
-    public Criteria toCriteria(ItemFilterModel filter) {
+    public static Criteria toCriteria(ItemFilterModel filter) {
         List<Criteria> criterias = new ArrayList<>();
 
         filter.getSearch()
